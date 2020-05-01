@@ -1,7 +1,7 @@
 
-The "inih" library is distributed under the New BSD license:
+The "INIreader" library is distributed under the New BSD license:
 
-Copyright (c) 2009, Ben Hoyt
+Copyright (c) 2020, Manuel Diaz
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

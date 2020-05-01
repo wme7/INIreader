@@ -1,15 +1,12 @@
-# inih (INI Not Invented Here)
+# INIreader
 
 [![TravisCI Build](https://travis-ci.org/benhoyt/inih.svg)](https://travis-ci.org/benhoyt/inih)
 
-**inih (INI Not Invented Here)** is a simple [.INI file](http://en.wikipedia.org/wiki/INI_file) parser written in C. It's only a couple of pages of code, and it was designed to be _small and simple_, so it's good for embedded systems. It's also more or less compatible with Python's [ConfigParser](http://docs.python.org/library/configparser.html) style of .INI files, including RFC 822-style multi-line syntax and `name: value` entries.
+**INIreader** is a simple [.INI file](http://en.wikipedia.org/wiki/INI_file) parser written in C++. It's two pages of code, and it was designed to be _minimalistic and simple_, so it's good easy to be embedded other C++ projecst. It's also more or less compatible with Python's [ConfigParser](http://docs.python.org/library/configparser.html) style of .INI files, including RFC 822-style multi-line syntax and `name: value` entries.
 
 To use it, just give `ini_parse()` an INI file, and it will call a callback for every `name=value` pair parsed, giving you strings for the section, name, and value. It's done this way ("SAX style") because it works well on low-memory embedded systems, but also because it makes for a KISS implementation.
 
 You can also call `ini_parse_file()` to parse directly from a `FILE*` object, `ini_parse_string()` to parse data from a string, or `ini_parse_stream()` to parse using a custom fgets-style reader function for custom I/O.
-
-Download a release, browse the source, or read about [how to use inih in a DRY style](http://blog.brush.co.nz/2009/08/xmacros/) with X-Macros.
-
 
 ## Compile-time options ##
 
@@ -36,57 +33,8 @@ You can control various aspects of inih using preprocessor defines:
   * **Initial malloc size:** `INI_INITIAL_ALLOC` specifies the initial malloc size when using the heap. It defaults to 200 bytes.
   * **Allow realloc:** By default when using the heap (`-DINI_USE_STACK=0`), inih allocates a fixed-sized buffer of `INI_INITIAL_ALLOC` bytes. To allow this to grow to `INI_MAX_LINE` bytes, doubling if needed, set `-DINI_ALLOW_REALLOC=1`.
 
-## Simple example in C ##
 
-```c
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "../ini.h"
-
-typedef struct
-{
-    int version;
-    const char* name;
-    const char* email;
-} configuration;
-
-static int handler(void* user, const char* section, const char* name,
-                   const char* value)
-{
-    configuration* pconfig = (configuration*)user;
-
-    #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
-    if (MATCH("protocol", "version")) {
-        pconfig->version = atoi(value);
-    } else if (MATCH("user", "name")) {
-        pconfig->name = strdup(value);
-    } else if (MATCH("user", "email")) {
-        pconfig->email = strdup(value);
-    } else {
-        return 0;  /* unknown section/name, error */
-    }
-    return 1;
-}
-
-int main(int argc, char* argv[])
-{
-    configuration config;
-
-    if (ini_parse("test.ini", handler, &config) < 0) {
-        printf("Can't load 'test.ini'\n");
-        return 1;
-    }
-    printf("Config loaded from 'test.ini': version=%d, name=%s, email=%s\n",
-        config.version, config.name, config.email);
-    return 0;
-}
-```
-
-
-## C++ example ##
-
-If you're into C++ and the STL, there is also an easy-to-use [INIReader class](https://github.com/benhoyt/inih/blob/master/cpp/INIReader.h) that stores values in a `map` and lets you `Get()` them:
+## Simple C++ example ##
 
 ```cpp
 #include <iostream>
@@ -127,31 +75,3 @@ Some differences between inih and Python's [ConfigParser](http://docs.python.org
 ## Platform-specific notes ##
 
 * Windows/Win32 uses UTF-16 filenames natively, so to handle Unicode paths you need to call `_wfopen()` to open a file and then `ini_parse_file()` to parse it; inih does not include `wchar_t` or Unicode handling.
-
-## Meson notes ##
-
-* The `meson.build` file is not required to use or compile inih, its main purpose is for distributions.
-* By default Meson only creates a static library for inih, but Meson can be used to configure this behavior:
-* with `-Ddefault_library=shared` a shared library is build.
-* with `-Ddistro_install=true` the library will be installed with the header and a pkg-config entry, you may want to set `-Ddefault_library=shared` when using this.
-* with `-Dwith_INIReader` you can build (and install if selected) the C++ library.
-* all compile-time options are implemented in Meson as well, you can take a look at [meson_options.txt](https://github.com/benhoyt/inih/blob/master/meson_options.txt) for their definition. These won't work if `distro_install` is set to `true`.
-* If you want to use inih for programs which may be shipped in a distro, consider linking against the shared libraries. The pkg-config entries are `inih` and `INIReader`.
-* In case you use inih as a subproject, you can use the `inih_dep` and `INIReader_dep` dependency variables.
-
-## Building from vcpkg ##
-
-You can build and install inih using [vcpkg](https://github.com/microsoft/vcpkg/) dependency manager:
-
-    git clone https://github.com/Microsoft/vcpkg.git
-    cd vcpkg
-    ./bootstrap-vcpkg.sh
-    ./vcpkg integrate install
-    ./vcpkg install inih
-
-The inih port in vcpkg is kept up to date by microsoft team members and community contributors.
-If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
-
-## Related links ##
-
-* [Conan package for inih](https://github.com/mohamedghita/conan-inih) (Conan is a C/C++ package manager)
