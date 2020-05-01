@@ -1,8 +1,6 @@
 # INIreader
 
-[![TravisCI Build](https://travis-ci.org/benhoyt/inih.svg)](https://travis-ci.org/benhoyt/inih)
-
-**INIreader** is a simple [.INI file](http://en.wikipedia.org/wiki/INI_file) parser written in C++. It's two pages of code, and it was designed to be _minimalistic and simple_, so it's good easy to be embedded other C++ projecst. It's also more or less compatible with Python's [ConfigParser](http://docs.python.org/library/configparser.html) style of .INI files, including RFC 822-style multi-line syntax and `name: value` entries.
+**INIreader** is a simple [.INI file](http://en.wikipedia.org/wiki/INI_file) parser written in C++. It's two pages of code, and it was designed to be _minimalistic and simple_, so that is easy to make it part of any other C++ project. It's also more or less compatible with Python's [ConfigParser](http://docs.python.org/library/configparser.html) style of .INI files, including RFC 822-style multi-line syntax and `name: value` entries.
 
 To use it, just give `ini_parse()` an INI file, and it will call a callback for every `name=value` pair parsed, giving you strings for the section, name, and value. It's done this way ("SAX style") because it works well on low-memory embedded systems, but also because it makes for a KISS implementation.
 
@@ -54,15 +52,29 @@ int main()
               << reader.Get("user", "email", "UNKNOWN") << ", pi="
               << reader.GetReal("user", "pi", -1) << ", active="
               << reader.GetBoolean("user", "active", true) << "\n";
+              
+    std::cout<<"Found sections and fields:"<<std::endl;
+    std::set<std::string> sections = reader.GetSections();
+    for(std::set<std::string>::iterator sectionsIt = sections.begin();
+        sectionsIt!=sections.end();
+        sectionsIt++)
+    {
+        std::cout << "  [" << *sectionsIt << "]: ";
+        std::set<std::string> fields = reader.GetFields(*sectionsIt);
+        for(std::set<std::string>::iterator fieldsIt = fields.begin();
+            fieldsIt!=fields.end();
+            fieldsIt++)
+        {
+            if(fieldsIt!=fields.begin())
+                std::cout << ", ";
+            std::cout << *fieldsIt;
+        }
+        std::cout << std::endl;
+    }
+    
     return 0;
 }
 ```
-
-This simple C++ API works fine, but it's not very fully-fledged. I'm not planning to work more on the C++ API at the moment, so if you want a bit more power (for example `GetSections()` and `GetFields()` functions), see these forks:
-
-  * https://github.com/Blandinium/inih
-  * https://github.com/OSSystems/inih
-
 
 ## Differences from ConfigParser ##
 
